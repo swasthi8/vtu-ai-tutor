@@ -1,0 +1,163 @@
+/* ------------------------------
+   Chat Page
+------------------------------ */
+
+.chat-page {
+  max-width: 1000px;
+  margin: 30px auto;
+  padding: 20px;
+}
+
+/* ------------------------------
+   Header
+------------------------------ */
+
+.chat-header {
+  background: #1565c0;
+  color: white;
+  padding: 25px;
+  border-radius: 12px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.chat-header h1 {
+  margin: 0;
+  font-size: 36px;
+}
+
+.chat-header p {
+  margin-top: 10px;
+  font-size: 17px;
+}
+
+/* ------------------------------
+   Study Tools
+------------------------------ */
+
+.study-tools {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.study-tools button {
+  background: #1565c0;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.study-tools button:hover {
+  background: #0d47a1;
+  transform: translateY(-2px);
+}
+
+/* ------------------------------
+   Chat Window
+------------------------------ */
+
+.chat-container {
+  height: 420px;
+  overflow-y: auto;
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+}
+
+/* ------------------------------
+   Messages
+------------------------------ */
+
+.message {
+  max-width: 75%;
+  padding: 12px 16px;
+  margin: 12px 0;
+  border-radius: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.message.user {
+  margin-left: auto;
+  background: #1565c0;
+  color: white;
+}
+
+.message.ai {
+  margin-right: auto;
+  background: #e3f2fd;
+  color: #222;
+}
+
+/* ------------------------------
+   Input
+------------------------------ */
+
+.chat-input {
+  display: flex;
+  gap: 12px;
+}
+
+.chat-input input {
+  flex: 1;
+  padding: 14px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.chat-input button {
+  width: 120px;
+  background: #1565c0;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.chat-input button:hover {
+  background: #0d47a1;
+}
+
+/* ------------------------------
+   Responsive
+------------------------------ */
+
+@media (max-width: 768px) {
+
+  .chat-page {
+    padding: 10px;
+  }
+
+  .chat-header h1 {
+    font-size: 28px;
+  }
+
+  .chat-container {
+    height: 350px;
+  }
+
+  .chat-input {
+    flex-direction: column;
+  }
+
+  .chat-input button {
+    width: 100%;
+  }
+
+  .message {
+    max-width: 90%;
+  }
+}
