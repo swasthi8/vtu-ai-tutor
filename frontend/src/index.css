@@ -1,19 +1,45 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap');
+
+:root {
+  --bg-dark: #09090B;
+  --bg-light: #F8FAFC;
+  --glass: rgba(255,255,255,0.06);
 }
 
-html,
-body,
-#root {
-  width: 100%;
-  min-height: 100%;
-}
+* { box-sizing: border-box }
+
+html, body, #root { height: 100% }
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
-  background: #f5f7fb;
-  color: #333;
-  overflow-x: hidden;
+  @apply font-inter bg-[--bg-light] text-slate-900 antialiased;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.dark body {
+  background-color: var(--bg-dark);
+  color: #e6eef8;
+}
+
+/* small utility for glass cards */
+.glass {
+  background: rgba(15, 23, 42, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.16);
+  backdrop-filter: blur(18px) saturate(140%);
+}
+
+.main-content {
+  min-height: calc(100vh - 96px);
+  padding-top: 96px;
+}
+
+.floating-blob {
+  position: absolute;
+  filter: blur(32px) saturate(140%);
+  opacity: 0.7;
 }

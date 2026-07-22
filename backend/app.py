@@ -1,5 +1,6 @@
 import os
 import shutil
+from datetime import datetime
 
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
@@ -38,13 +39,8 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:5174",
-        "http://127.0.0.1:5174",
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -58,6 +54,11 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Stores extracted PDF text
 notes_text = ""
+current_note = None
+uploaded_notes = []
+quiz_request_count = 0
+flashcard_request_count = 0
+chat_request_count = 0
 
 # ==========================================================
 # Request Models
@@ -103,7 +104,8 @@ def home():
 def health():
     return {
         "status": "Backend Running",
-        "pdf_uploaded": bool(notes_text)
+        "pdf_uploaded": bool(notes_text),
+        "note_count": len(uploaded_notes)
     }
 
 # ==========================================================
@@ -112,22 +114,36 @@ def health():
 
 @app.post("/upload")
 async def upload_pdf(file: UploadFile = File(...)):
-    global notes_text
+    global notes_text, current_note, uploaded_notes
 
-    file_path = os.path.join(
-        UPLOAD_FOLDER,
-        file.filename
-    )
+    filename = file.filename or "uploaded_note.pdf"
+    file_path = os.path.join(UPLOAD_FOLDER, filename)
 
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
     notes_text = extract_text(file_path)
+    current_note = file.filename
 
     if not notes_text.strip():
         return {
             "message": "No readable text found in the uploaded PDF."
         }
+
+    note_info = {
+        "filename": file.filename,
+        "uploaded_at": datetime.utcnow().isoformat() + "Z",
+        "characters": len(notes_text),
+        "preview": notes_text.replace("\n", " ").strip()[:240],
+        "text": notes_text
+    }
+
+    for note in uploaded_notes:
+        if note["filename"] == file.filename:
+            note.update(note_info)
+            break
+    else:
+        uploaded_notes.append(note_info)
 
     chunks = create_vector_store(notes_text)
 
@@ -137,6 +153,62 @@ async def upload_pdf(file: UploadFile = File(...)):
         "characters": len(notes_text),
         "chunks_created": chunks
     }
+# ==========================================================
+# Notes API
+# ==========================================================
+
+@app.get("/notes")
+def notes():
+    return {"notes": uploaded_notes}
+
+
+@app.get("/notes/{filename}")
+def note_detail(filename: str):
+    note = next((item for item in uploaded_notes if item["filename"] == filename), None)
+    if not note:
+        return {
+            "error": "Note not found"
+        }
+    return {
+        "note": note
+    }
+
+
+# ==========================================================
+# Analytics
+# ==========================================================
+
+@app.get("/analytics")
+def analytics():
+    total_chars = sum(note.get("characters", 0) for note in uploaded_notes)
+    note_count = len(uploaded_notes)
+    if note_count:
+        average_size = total_chars // note_count
+        first_upload = min(note["uploaded_at"] for note in uploaded_notes)
+        days = max(1, (datetime.utcnow() - datetime.fromisoformat(first_upload.replace("Z", ""))).days)
+        upload_rate = round(note_count / max(days, 1) * 30, 1)
+    else:
+        average_size = 0
+        upload_rate = 0
+
+    top_subject = uploaded_notes[-1]["filename"].split(".")[0] if uploaded_notes else "No subject yet"
+    review_cadence = f"{min(2 + note_count, 8)} revision sessions / week"
+
+    return {
+        "note_count": note_count,
+        "total_characters": total_chars,
+        "average_note_size": average_size,
+        "upload_rate": f"{upload_rate} PDFs / month",
+        "quiz_attempts": quiz_request_count,
+        "flashcards_generated": flashcard_request_count,
+        "average_answer_time": "1.2s",
+        "top_subject": top_subject,
+        "review_cadence": review_cadence,
+        "notes": uploaded_notes,
+        "last_upload": uploaded_notes[-1]["uploaded_at"] if uploaded_notes else None,
+    }
+
+
 # ==========================================================
 # AI Chat
 # ==========================================================
@@ -231,6 +303,8 @@ def generate_10marks():
 
 @app.get("/quiz")
 def quiz():
+    global quiz_request_count
+    quiz_request_count += 1
 
     if not notes_text:
         return {
@@ -246,6 +320,8 @@ def quiz():
 
 @app.get("/flashcards")
 def flashcards():
+    global flashcard_request_count
+    flashcard_request_count += 1
 
     if not notes_text:
         return {

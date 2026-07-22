@@ -1,39 +1,44 @@
 .flashcards-page {
-  max-width: 900px;
+  max-width: 920px;
   margin: auto;
   padding: 40px;
   text-align: center;
+  background: rgba(255,255,255,0.96);
+  border: 1px solid rgba(15,76,144,0.12);
+  border-radius: 26px;
+  box-shadow: 0 28px 60px rgba(15,40,87,0.08);
 }
 
 .flashcards-page h1 {
-  color: #1565c0;
+  color: #0f4c90;
   margin-bottom: 25px;
+  font-size: 2.4rem;
 }
 
 .flashcard {
-  width: 700px;
+  width: 720px;
   max-width: 95%;
-  min-height: 300px;
+  min-height: 320px;
   margin: auto;
-  background: linear-gradient(135deg, #1976d2, #0d47a1);
+  background: linear-gradient(135deg, #1652c0, #0d47a1);
   color: white;
-  border-radius: 20px;
+  border-radius: 28px;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  padding: 30px;
-  transition: transform 0.3s;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  padding: 36px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 22px 60px rgba(15,40,87,0.2);
 }
 
 .flashcard:hover {
-  transform: scale(1.02);
+  transform: translateY(-4px);
 }
 
 .flashcard h2 {
-  line-height: 1.6;
-  font-size: 28px;
+  line-height: 1.5;
+  font-size: 1.8rem;
 }
 
 .controls {
@@ -41,29 +46,37 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 30px;
+  gap: 24px;
+  flex-wrap: wrap;
 }
 
 .controls button {
-  padding: 12px 24px;
+  padding: 14px 26px;
   border: none;
-  background: #1565c0;
+  background: linear-gradient(135deg, #1652c0, #0d47a1);
   color: white;
-  border-radius: 10px;
+  border-radius: 999px;
   cursor: pointer;
   font-size: 16px;
+  box-shadow: 0 16px 32px rgba(15,76,144,0.16);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .controls button:hover {
-  background: #0d47a1;
+  transform: translateY(-2px);
+  box-shadow: 0 20px 38px rgba(15,76,144,0.2);
 }
 
 .controls span {
-  font-size: 18px;
-  font-weight: bold;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #334155;
 }
 
 .flashcards-page p {
   margin-top: 20px;
-  color: #666;
+  color: #475569;
+  max-width: 680px;
+  margin-left: auto;
+  margin-right: auto;
 }

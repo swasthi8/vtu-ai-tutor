@@ -5,6 +5,7 @@ import { uploadPDF } from "../services/api";
 function Upload() {
   const [file, setFile] = useState(null);
   const [message, setMessage] = useState("");
+  const [status, setStatus] = useState("idle");
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
@@ -12,27 +13,31 @@ function Upload() {
     if (selectedFile) {
       setFile(selectedFile);
       setMessage("");
+      setStatus("idle");
     }
   };
 
   const handleUpload = async () => {
     if (!file) {
       setMessage("⚠ Please select a PDF file first.");
+      setStatus("error");
       return;
     }
+
+    setStatus("loading");
+    setMessage("Uploading your PDF... Please wait.");
 
     try {
       const result = await uploadPDF(file);
 
       setMessage(
-        `✅ PDF Uploaded Successfully!\n
-Filename: ${result.filename}
-Characters: ${result.characters}
-Chunks Created: ${result.chunks_created}`
+        `✅ PDF Uploaded Successfully!\nFilename: ${result.filename}\nCharacters: ${result.characters}\nChunks Created: ${result.chunks_created}`
       );
+      setStatus("success");
     } catch (error) {
       console.error(error);
-      setMessage("❌ Failed to upload PDF.");
+      setMessage(`❌ Upload failed: ${error.message}`);
+      setStatus("error");
     }
   };
 

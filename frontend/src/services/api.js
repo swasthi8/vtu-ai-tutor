@@ -13,7 +13,8 @@ export async function uploadPDF(file) {
   });
 
   if (!response.ok) {
-    throw new Error("Failed to upload PDF");
+    const errorText = await response.text();
+    throw new Error(errorText || "Failed to upload PDF");
   }
 
   return await response.json();
@@ -111,6 +112,42 @@ export async function getFlashcards() {
 
   if (!response.ok) {
     throw new Error("Failed to generate flashcards");
+  }
+
+  return await response.json();
+}
+
+// ===============================
+// Notes
+// ===============================
+export async function getNotesList() {
+  const response = await fetch(`${API_URL}/notes`);
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch notes");
+  }
+
+  return await response.json();
+}
+
+export async function getNoteDetail(filename) {
+  const response = await fetch(`${API_URL}/notes/${encodeURIComponent(filename)}`);
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch note details");
+  }
+
+  return await response.json();
+}
+
+// ===============================
+// Analytics
+// ===============================
+export async function getAnalytics() {
+  const response = await fetch(`${API_URL}/analytics`);
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch analytics");
   }
 
   return await response.json();
