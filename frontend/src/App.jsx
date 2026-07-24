@@ -9,7 +9,6 @@ import Quiz from "./pages/Quiz";
 import Flashcards from "./pages/Flashcards";
 import Notes from "./pages/Notes";
 import Dashboard from "./pages/Dashboard";
-import Analytics from "./pages/Analytics";
 import About from "./pages/About";
 
 import { Routes, Route } from "react-router-dom";
@@ -31,7 +30,6 @@ function App() {
           <Route path="/chat" element={<Chat />} />
           <Route path="/flashcards" element={<Flashcards />} />
           <Route path="/quiz" element={<Quiz />} />
-          <Route path="/analytics" element={<Analytics />} />
           <Route path="/about" element={<About />} />
         </Routes>
       </main>

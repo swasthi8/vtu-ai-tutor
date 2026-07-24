@@ -197,9 +197,9 @@ Uploaded Notes:
 # Quiz Generator
 # ==========================================================
 
-def generate_mcq_quiz():
+def generate_mcq_quiz(context_text: str | None = None):
 
-    context = search_notes("important concepts", k=8)
+    context = context_text if context_text else search_notes("important concepts", k=8)
 
     if not context:
         return {"error": "Please upload a PDF first."}
@@ -286,9 +286,9 @@ Uploaded Notes:
 # Flashcards
 # ==========================================================
 
-def generate_flashcards():
+def generate_flashcards(context_text: str | None = None):
 
-    context = search_notes("important concepts", k=8)
+    context = context_text if context_text else search_notes("important concepts", k=8)
 
     if not context:
         return [

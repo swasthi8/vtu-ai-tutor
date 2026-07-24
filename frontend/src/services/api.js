@@ -1,5 +1,28 @@
 const API_URL = "http://127.0.0.1:8000";
 
+function getSessionId() {
+  try {
+    return localStorage.getItem("session_id");
+  } catch (e) {
+    return null;
+  }
+}
+
+function saveSessionId(id) {
+  try {
+    localStorage.setItem("session_id", id);
+  } catch (e) {
+    // ignore
+  }
+}
+
+function getHeaders(extra = {}) {
+  const headers = { ...extra };
+  const sid = getSessionId();
+  if (sid) headers["X-Session-ID"] = sid;
+  return headers;
+}
+
 // ===============================
 // Upload PDF
 // ===============================
@@ -10,12 +33,16 @@ export async function uploadPDF(file) {
   const response = await fetch(`${API_URL}/upload`, {
     method: "POST",
     body: formData,
+    headers: getHeaders(),
   });
 
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error(errorText || "Failed to upload PDF");
   }
+  // Save session id returned by server (if any)
+  const sid = response.headers.get("X-Session-ID");
+  if (sid) saveSessionId(sid);
 
   return await response.json();
 }
@@ -28,6 +55,7 @@ export async function askQuestion(question) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      ...getHeaders(),
     },
     body: JSON.stringify({ question }),
   });
@@ -43,7 +71,7 @@ export async function askQuestion(question) {
 // Summary
 // ===============================
 export async function getSummary() {
-  const response = await fetch(`${API_URL}/summary`);
+  const response = await fetch(`${API_URL}/summary`, { headers: getHeaders() });
 
   if (!response.ok) {
     throw new Error("Failed to generate summary");
@@ -56,7 +84,7 @@ export async function getSummary() {
 // 2 Marks
 // ===============================
 export async function getTwoMarks() {
-  const response = await fetch(`${API_URL}/generate-2marks`);
+  const response = await fetch(`${API_URL}/generate-2marks`, { headers: getHeaders() });
 
   if (!response.ok) {
     throw new Error("Failed to generate 2-mark questions");
@@ -69,7 +97,7 @@ export async function getTwoMarks() {
 // 5 Marks
 // ===============================
 export async function getFiveMarks() {
-  const response = await fetch(`${API_URL}/generate-5marks`);
+  const response = await fetch(`${API_URL}/generate-5marks`, { headers: getHeaders() });
 
   if (!response.ok) {
     throw new Error("Failed to generate 5-mark questions");
@@ -82,7 +110,7 @@ export async function getFiveMarks() {
 // 10 Marks
 // ===============================
 export async function getTenMarks() {
-  const response = await fetch(`${API_URL}/generate-10marks`);
+  const response = await fetch(`${API_URL}/generate-10marks`, { headers: getHeaders() });
 
   if (!response.ok) {
     throw new Error("Failed to generate 10-mark questions");
@@ -94,8 +122,13 @@ export async function getTenMarks() {
 // ===============================
 // Quiz
 // ===============================
-export async function getQuiz() {
-  const response = await fetch(`${API_URL}/quiz`);
+export async function getQuiz(module = null) {
+  const url = new URL(`${API_URL}/quiz`);
+  if (module && module !== "all") {
+    url.searchParams.set("module", module);
+  }
+
+  const response = await fetch(url, { headers: getHeaders() });
 
   if (!response.ok) {
     throw new Error("Failed to generate quiz");
@@ -107,8 +140,13 @@ export async function getQuiz() {
 // ===============================
 // Flashcards
 // ===============================
-export async function getFlashcards() {
-  const response = await fetch(`${API_URL}/flashcards`);
+export async function getFlashcards(module = null) {
+  const url = new URL(`${API_URL}/flashcards`);
+  if (module && module !== "all") {
+    url.searchParams.set("module", module);
+  }
+
+  const response = await fetch(url, { headers: getHeaders() });
 
   if (!response.ok) {
     throw new Error("Failed to generate flashcards");
@@ -121,7 +159,7 @@ export async function getFlashcards() {
 // Notes
 // ===============================
 export async function getNotesList() {
-  const response = await fetch(`${API_URL}/notes`);
+  const response = await fetch(`${API_URL}/notes`, { headers: getHeaders() });
 
   if (!response.ok) {
     throw new Error("Failed to fetch notes");
@@ -131,7 +169,7 @@ export async function getNotesList() {
 }
 
 export async function getNoteDetail(filename) {
-  const response = await fetch(`${API_URL}/notes/${encodeURIComponent(filename)}`);
+  const response = await fetch(`${API_URL}/notes/${encodeURIComponent(filename)}`, { headers: getHeaders() });
 
   if (!response.ok) {
     throw new Error("Failed to fetch note details");
@@ -141,23 +179,10 @@ export async function getNoteDetail(filename) {
 }
 
 // ===============================
-// Analytics
-// ===============================
-export async function getAnalytics() {
-  const response = await fetch(`${API_URL}/analytics`);
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch analytics");
-  }
-
-  return await response.json();
-}
-
-// ===============================
 // Backend Info
 // ===============================
 export async function getInfo() {
-  const response = await fetch(`${API_URL}/info`);
+  const response = await fetch(`${API_URL}/info`, { headers: getHeaders() });
 
   if (!response.ok) {
     throw new Error("Failed to fetch backend information");
@@ -170,7 +195,7 @@ export async function getInfo() {
 // Health Check
 // ===============================
 export async function getHealth() {
-  const response = await fetch(`${API_URL}/health`);
+  const response = await fetch(`${API_URL}/health`, { headers: getHeaders() });
 
   if (!response.ok) {
     throw new Error("Backend is not responding");

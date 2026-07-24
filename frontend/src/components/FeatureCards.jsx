@@ -4,12 +4,11 @@ import { motion } from 'framer-motion';
 const MotionLink = motion(Link);
 
 const features = [
-  { icon: '📄', title: 'Smart PDF Upload', desc: 'Upload your course PDFs and let AI index them.' },
-  { icon: '🧠', title: 'AI Tutor', desc: 'Ask questions and get exam-focused answers.' },
-  { icon: '📝', title: 'Summary Generator', desc: 'Auto-create concise chapter summaries.' },
-  { icon: '🎯', title: 'Question Generator', desc: 'Generate practice questions for exams.' },
-  { icon: '💬', title: 'Chat with Notes', desc: 'Contextual chat powered by your uploads.' },
-  { icon: '📊', title: 'Study Analytics', desc: 'Track progress and weak subjects.' },
+  { icon: '📄', title: 'Smart PDF Upload', desc: 'Upload your course PDFs and let AI index them.', route: '/upload' },
+  { icon: '🧠', title: 'AI Tutor', desc: 'Ask questions and get exam-focused answers.', route: '/chat' },
+  { icon: '📝', title: 'Summary Generator', desc: 'Auto-create concise chapter summaries.', route: '/notes' },
+  { icon: '🎯', title: 'Question Generator', desc: 'Generate practice questions for exams.', route: '/quiz' },
+  { icon: '💬', title: 'Chat with Notes', desc: 'Contextual chat powered by your uploads.', route: '/chat' },
 ];
 
 function FeatureCards() {
@@ -23,7 +22,7 @@ function FeatureCards() {
       <div className="features-grid">
         {features.map((f, idx) => (
           <MotionLink
-            to="/"
+            to={f.route || '/'}
             className="feature-card"
             key={idx}
             whileHover={{ y: -8 }}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getQuiz } from "../services/api";
+import { getNotesList, getQuiz } from "../services/api";
 import "./Quiz.css";
 
 function Quiz() {
@@ -9,14 +9,29 @@ function Quiz() {
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [modules, setModules] = useState([]);
+  const [selectedModule, setSelectedModule] = useState("all");
 
   useEffect(() => {
-    loadQuiz();
+    async function initQuiz() {
+      try {
+        const notesData = await getNotesList();
+        setModules(notesData.notes || []);
+      } catch (error) {
+        console.error(error);
+        setModules([]);
+      }
+
+      await loadQuiz("all");
+    }
+
+    initQuiz();
   }, []);
 
-  async function loadQuiz() {
+  async function loadQuiz(moduleName = selectedModule) {
+    setLoading(true);
     try {
-      const data = await getQuiz();
+      const data = await getQuiz(moduleName);
 
       if (Array.isArray(data)) {
         setQuiz(data);
@@ -85,6 +100,26 @@ function Quiz() {
   return (
     <div className="quiz-page">
       <h1>📝 AI Quiz</h1>
+
+      <label style={{ display: "block", marginBottom: "12px" }}>
+        <span style={{ display: "block", marginBottom: "6px" }}>Generate quiz from:</span>
+        <select
+          value={selectedModule}
+          onChange={(event) => {
+            const moduleName = event.target.value;
+            setSelectedModule(moduleName);
+            loadQuiz(moduleName);
+          }}
+          style={{ padding: "8px 10px", borderRadius: "8px" }}
+        >
+          <option value="all">All modules</option>
+          {modules.map((module) => (
+            <option key={module.filename} value={module.filename}>
+              {module.filename}
+            </option>
+          ))}
+        </select>
+      </label>
 
       <h2>
         Question {current + 1} of {quiz.length}

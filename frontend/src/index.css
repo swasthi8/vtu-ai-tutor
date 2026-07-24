@@ -5,7 +5,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap');
 
 :root {
-  --bg-dark: #09090B;
   --bg-light: #F8FAFC;
   --glass: rgba(255,255,255,0.06);
 }
@@ -18,11 +17,6 @@ body {
   @apply font-inter bg-[--bg-light] text-slate-900 antialiased;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-.dark body {
-  background-color: var(--bg-dark);
-  color: #e6eef8;
 }
 
 /* small utility for glass cards */

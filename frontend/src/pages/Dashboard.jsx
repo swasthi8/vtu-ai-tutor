@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { AreaChart, Area, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, PieChart, Pie, Cell } from 'recharts';
-import { getAnalytics } from '../services/api';
+import { getNotesList } from '../services/api';
 
 const trendData = [
   { name: 'Mon', value: 48 },
@@ -29,23 +29,8 @@ const progressData = [
 const COLORS = ['#2563EB', '#475569'];
 
 export default function Dashboard() {
-  const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getAnalytics()
-      .then((data) => {
-        setAnalytics(data);
-      })
-      .catch(() => {
-        setAnalytics(null);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, []);
-
-  const summary = analytics || {
+  const [summary, setSummary] = useState({
     note_count: 0,
     upload_rate: '0 PDFs / month',
     average_answer_time: '—',
@@ -54,7 +39,36 @@ export default function Dashboard() {
     top_subject: 'No subject yet',
     review_cadence: '0 revision sessions / week',
     last_upload: null,
-  };
+  });
+
+  useEffect(() => {
+    async function loadDashboard() {
+      try {
+        const noteData = await getNotesList();
+        const notes = noteData.notes || [];
+        const noteCount = notes.length;
+        const topSubject = noteCount ? notes[noteCount - 1].filename.split('.')[0] : 'No subject yet';
+        const firstUpload = notes.length ? new Date(notes[0].uploaded_at) : null;
+        const lastUpload = notes.length ? notes[noteCount - 1].uploaded_at : null;
+        const days = firstUpload ? Math.max(1, Math.round((Date.now() - firstUpload.getTime()) / 86400000)) : 1;
+        const uploadRate = noteCount ? `${Math.round((noteCount / days) * 30)} PDFs / month` : '0 PDFs / month';
+
+        setSummary((current) => ({
+          ...current,
+          note_count: noteCount,
+          upload_rate: uploadRate,
+          top_subject: topSubject,
+          last_upload: lastUpload,
+        }));
+      } catch (error) {
+        console.error('Dashboard load failed', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadDashboard();
+  }, []);
 
   return (
     <div className="pt-32 pb-16 px-6 max-w-7xl mx-auto">
@@ -64,7 +78,7 @@ export default function Dashboard() {
           <div>
             <p className="text-sm uppercase tracking-[0.4em] text-slate-400">Dashboard</p>
             <h1 className="mt-3 text-4xl md:text-5xl font-extrabold tracking-tight text-white">Study metrics for the week</h1>
-            <p className="mt-4 max-w-2xl text-slate-300">A premium analytics view of your learning progress, quiz performance, and review cadence. Stay ahead with AI-powered insights.</p>
+            <p className="mt-4 max-w-2xl text-slate-300">A quick view of your study progress, uploads, and AI-powered revision support.</p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="glass rounded-3xl p-5 border border-white/10 shadow-xl">

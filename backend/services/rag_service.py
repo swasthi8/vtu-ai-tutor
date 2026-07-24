@@ -1,7 +1,10 @@
-import os
+from pathlib import Path
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
+from contextvars import ContextVar
+from services.session_manager import SESSION_ID
+
 
 # ==========================================================
 # Embedding Model
@@ -11,18 +14,24 @@ embeddings = HuggingFaceEmbeddings(
     model_name="sentence-transformers/all-MiniLM-L6-v2"
 )
 
-DB_PATH = "vectorstore"
+BASE_DB_PATH = Path("vectorstore")
 
-vector_db = None
+# Keep a per-session cache of loaded vectorstores
+_vector_stores = {}
+
+
+def _get_session_db_path() -> Path:
+    sid = SESSION_ID.get()
+    if not sid:
+        raise RuntimeError("Session ID not set in context")
+    return BASE_DB_PATH / sid
 
 
 # ==========================================================
 # Create Vector Store
 # ==========================================================
 
-def create_vector_store(text):
-    global vector_db
-
+def create_vector_store(text: str):
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000,
         chunk_overlap=200
@@ -30,14 +39,43 @@ def create_vector_store(text):
 
     chunks = splitter.split_text(text)
 
+    db_path = _get_session_db_path()
+    db_path.mkdir(parents=True, exist_ok=True)
+
+    # If a vector DB already exists for this session, load it and append new texts
+    existing_db = load_vector_store()
+    if existing_db is not None:
+        try:
+            # Prefer add_texts if available
+            if hasattr(existing_db, "add_texts"):
+                existing_db.add_texts(chunks)
+            else:
+                # Fallback: create a new store from chunks and merge indices if supported
+                new_db = FAISS.from_texts(texts=chunks, embedding=embeddings)
+                if hasattr(existing_db, "merge_from"):
+                    existing_db.merge_from(new_db)
+                else:
+                    # As a last resort, re-create by saving both
+                    # (This is unlikely; most FAISS wrappers support add_texts)
+                    pass
+
+            existing_db.save_local(str(db_path))
+            _vector_stores[SESSION_ID.get()] = existing_db
+            print(f"Appended {len(chunks)} chunks to existing Vector Store for session {SESSION_ID.get()}.")
+            return len(chunks)
+        except Exception as e:
+            print("Failed to append to existing vector store, recreating:", e)
+
+    # No existing DB -> create new
     vector_db = FAISS.from_texts(
         texts=chunks,
         embedding=embeddings
     )
 
-    vector_db.save_local(DB_PATH)
+    vector_db.save_local(str(db_path))
+    _vector_stores[SESSION_ID.get()] = vector_db
 
-    print(f"Vector Store Created with {len(chunks)} chunks.")
+    print(f"Vector Store Created for session {SESSION_ID.get()} with {len(chunks)} chunks.")
 
     return len(chunks)
 
@@ -47,36 +85,42 @@ def create_vector_store(text):
 # ==========================================================
 
 def load_vector_store():
-    global vector_db
+    sid = SESSION_ID.get()
+    if not sid:
+        print("No session id in context for loading vector store.")
+        return None
 
-    if not os.path.exists(DB_PATH):
-        print("No previous vector database found.")
-        vector_db = None
-        return
+    if sid in _vector_stores:
+        return _vector_stores[sid]
+
+    db_path = _get_session_db_path()
+
+    if not db_path.exists():
+        print(f"No vector DB for session {sid}.")
+        return None
 
     try:
         vector_db = FAISS.load_local(
-            DB_PATH,
+            str(db_path),
             embeddings,
             allow_dangerous_deserialization=True
         )
 
-        print("Vector Store Loaded Successfully.")
+        _vector_stores[sid] = vector_db
+        print(f"Vector Store Loaded Successfully for session {sid}.")
+        return vector_db
 
     except Exception as e:
         print("Failed to load vector store:", e)
-        vector_db = None
+        return None
 
 
 # ==========================================================
 # Search Notes
 # ==========================================================
 
-def search_notes(question, k=8):
-    global vector_db
-
-    if vector_db is None:
-        load_vector_store()
+def search_notes(question: str, k: int = 8):
+    vector_db = load_vector_store()
 
     if vector_db is None:
         return ""
@@ -94,14 +138,17 @@ def search_notes(question, k=8):
 # ==========================================================
 
 def clear_vector_store():
-    global vector_db
+    sid = SESSION_ID.get()
+    if not sid:
+        return
 
-    vector_db = None
+    _vector_stores.pop(sid, None)
 
-    if os.path.exists(DB_PATH):
+    db_path = _get_session_db_path()
+    if db_path.exists():
         try:
             import shutil
-            shutil.rmtree(DB_PATH)
-            print("Vector Store Deleted.")
+            shutil.rmtree(db_path)
+            print(f"Vector Store Deleted for session {sid}.")
         except Exception as e:
             print("Unable to delete vector store:", e)
