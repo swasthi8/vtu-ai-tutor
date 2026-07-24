@@ -131,10 +131,16 @@ export async function getQuiz(module = null) {
   const response = await fetch(url, { headers: getHeaders() });
 
   if (!response.ok) {
-    throw new Error("Failed to generate quiz");
+    const errorText = await response.text();
+    throw new Error(errorText || "Failed to generate quiz");
   }
 
-  return await response.json();
+  const data = await response.json();
+  if (data && data.error) {
+    throw new Error(data.error);
+  }
+
+  return data;
 }
 
 // ===============================

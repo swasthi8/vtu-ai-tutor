@@ -11,6 +11,7 @@ function Quiz() {
   const [loading, setLoading] = useState(true);
   const [modules, setModules] = useState([]);
   const [selectedModule, setSelectedModule] = useState("all");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     async function initQuiz() {
@@ -30,6 +31,8 @@ function Quiz() {
 
   async function loadQuiz(moduleName = selectedModule) {
     setLoading(true);
+    setError("");
+
     try {
       const data = await getQuiz(moduleName);
 
@@ -42,6 +45,7 @@ function Quiz() {
       }
     } catch (error) {
       console.error(error);
+      setError(error.message || "Unable to generate quiz.");
       setQuiz([]);
     } finally {
       setLoading(false);
@@ -76,7 +80,7 @@ function Quiz() {
     return (
       <div className="quiz-page">
         <h2>No Quiz Available</h2>
-        <p>Please upload a PDF first.</p>
+        <p>{error || "Please upload a PDF first."}</p>
       </div>
     );
   }
